@@ -1,23 +1,19 @@
 
 import React from "react";
 import Navbar from "@/components/common/Navbar";
-import Hero from "@/components/home/Hero";
-import Features from "@/components/home/Features";
-import Stats from "@/components/home/Stats";
+import LoginForm from "@/components/authentication/LoginForm";
 import Footer from "@/components/common/Footer";
 
-const Index = () => {
+const Login = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
       <main className="flex-grow">
-        <Hero />
-        <Features />
-        <Stats />
+        <LoginForm />
       </main>
       <Footer />
     </div>
   );
 };
 
-export default Index;
+export default Login;
