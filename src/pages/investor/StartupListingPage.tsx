@@ -1,7 +1,6 @@
-
 import React from "react";
 import Navbar from "@/components/common/Navbar";
-import StartupList from "@/components/investor/StartupList";
+import { StartupList } from "@/components/investor/StartupList";
 import Footer from "@/components/common/Footer";
 
 const StartupListingPage = () => {

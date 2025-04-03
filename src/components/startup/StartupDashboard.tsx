@@ -1,13 +1,15 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
+import { collection, query, where, getDocs } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Plus } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 
 interface HostedStartup {
   id: string;
@@ -15,10 +17,19 @@ interface HostedStartup {
   domain: string;
   askingInvestment: number;
   equity: number;
-  createdAt: string;
+  createdAt: any;
   pendingRequests: number;
   approvedRequests: number;
   totalInvestment: number;
+  ownerId: string;
+  description: string;
+  founder: string;
+  cofounder?: string;
+  pitchVideoLink?: string;
+  websiteLink?: string;
+  foundedYear?: string;
+  teamSize?: number;
+  location?: string;
 }
 
 interface InvestmentRequest {
@@ -30,89 +41,87 @@ interface InvestmentRequest {
   amount: number;
   equity: number;
   status: "pending" | "approved" | "rejected";
-  date: string;
+  date: any;
 }
 
 const StartupDashboard = () => {
-  const { userData } = useAuth();
+  const { userData, currentUser } = useAuth();
   const [activeTab, setActiveTab] = useState("startups");
+  const [startups, setStartups] = useState<HostedStartup[]>([]);
+  const [requests, setRequests] = useState<InvestmentRequest[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
-  // Mock data for development purposes
-  const mockStartups: HostedStartup[] = [
-    {
-      id: "1",
-      name: "EcoSolutions India",
-      domain: "Sustainable Energy",
-      askingInvestment: 5000000,
-      equity: 15,
-      createdAt: "2023-01-15",
-      pendingRequests: 2,
-      approvedRequests: 1,
-      totalInvestment: 2500000,
-    },
-    {
-      id: "2",
-      name: "AgriTech Innovations",
-      domain: "Agriculture",
-      askingInvestment: 3000000,
-      equity: 12,
-      createdAt: "2023-03-10",
-      pendingRequests: 1,
-      approvedRequests: 0,
-      totalInvestment: 0,
-    },
-  ];
+  useEffect(() => {
+    const fetchStartupData = async () => {
+      if (!currentUser) return;
 
-  const mockRequests: InvestmentRequest[] = [
-    {
-      id: "req1",
-      startupId: "1",
-      startupName: "EcoSolutions India",
-      investorName: "Anand Mahindra",
-      investorId: "inv1",
-      amount: 2000000,
-      equity: 8,
-      status: "pending",
-      date: "2023-04-02",
-    },
-    {
-      id: "req2",
-      startupId: "1",
-      startupName: "EcoSolutions India",
-      investorName: "Ratan Tata",
-      investorId: "inv2",
-      amount: 3000000,
-      equity: 10,
-      status: "pending",
-      date: "2023-04-01",
-    },
-    {
-      id: "req3",
-      startupId: "1",
-      startupName: "EcoSolutions India",
-      investorName: "Mukesh Ambani",
-      investorId: "inv3",
-      amount: 2500000,
-      equity: 7,
-      status: "approved",
-      date: "2023-03-15",
-    },
-    {
-      id: "req4",
-      startupId: "2",
-      startupName: "AgriTech Innovations",
-      investorName: "Kiran Mazumdar-Shaw",
-      investorId: "inv4",
-      amount: 1500000,
-      equity: 6,
-      status: "pending",
-      date: "2023-03-28",
-    },
-  ];
+      try {
+        // Fetch startups owned by the current user
+        const startupsQuery = query(
+          collection(db, "startup_data"),
+          where("ownerId", "==", currentUser.uid)
+        );
+        const startupsSnapshot = await getDocs(startupsQuery);
+        const startupsList = startupsSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        })) as HostedStartup[];
 
-  const pendingRequests = mockRequests.filter(
+        // Fetch investment requests for these startups
+        const requestsQuery = query(
+          collection(db, "investment_requests"),
+          where("startupId", "in", startupsList.map(s => s.id))
+        );
+        const requestsSnapshot = await getDocs(requestsQuery);
+        const requestsList = requestsSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        })) as InvestmentRequest[];
+
+        // Update startup data with request counts
+        const updatedStartups = startupsList.map(startup => {
+          const startupRequests = requestsList.filter(req => req.startupId === startup.id);
+          return {
+            ...startup,
+            pendingRequests: startupRequests.filter(req => req.status === "pending").length,
+            approvedRequests: startupRequests.filter(req => req.status === "approved").length,
+            totalInvestment: startupRequests
+              .filter(req => req.status === "approved")
+              .reduce((sum, req) => sum + req.amount, 0),
+          };
+        });
+
+        setStartups(updatedStartups);
+        setRequests(requestsList);
+      } catch (error) {
+        console.error("Error fetching startup data:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load startup data. Please try again later.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStartupData();
+  }, [currentUser, toast]);
+
+  const pendingRequests = requests.filter(
     (request) => request.status === "pending"
   );
+
+  if (loading) {
+    return (
+      <div className="container mx-auto py-8 px-4">
+        <div className="text-center">
+          <p className="text-gray-500">Loading your dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto py-8 px-4">
@@ -141,9 +150,9 @@ const StartupDashboard = () => {
         </TabsList>
         
         <TabsContent value="startups">
-          {mockStartups.length > 0 ? (
+          {startups.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {mockStartups.map((startup) => (
+              {startups.map((startup) => (
                 <StartupCard key={startup.id} startup={startup} />
               ))}
             </div>
@@ -153,7 +162,7 @@ const StartupDashboard = () => {
         </TabsContent>
         
         <TabsContent value="requests">
-          {mockRequests.length > 0 ? (
+          {requests.length > 0 ? (
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {pendingRequests.map((request) => (
@@ -222,7 +231,7 @@ const StartupCard = ({ startup }: { startup: HostedStartup }) => {
           </div>
         </div>
       </CardContent>
-      <CardFooter className="pt-0">
+      <CardFooter>
         <Button 
           variant="outline" 
           size="sm" 
@@ -263,7 +272,7 @@ const RequestCard = ({ request }: { request: InvestmentRequest }) => {
           </div>
           <div>
             <p className="text-sm text-gray-500">Request Date</p>
-            <p className="text-sm">{new Date(request.date).toLocaleDateString()}</p>
+            <p className="text-sm">{new Date(request.date?.toDate()).toLocaleDateString()}</p>
           </div>
         </div>
       </CardContent>

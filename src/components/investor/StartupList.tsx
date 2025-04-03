@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { collection, getDocs } from "firebase/firestore";
@@ -8,27 +7,41 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 
 interface Startup {
   id: string;
   name: string;
   founder: string;
+  cofounder?: string;
   domain: string;
   description: string;
   askingInvestment: number;
   equity: number;
+  pitchVideoLink?: string;
+  websiteLink?: string;
+  foundedYear?: string;
+  teamSize?: number;
+  location?: string;
+  ownerId: string;
+  ownerEmail: string;
+  createdAt: any;
+  pendingRequests: number;
+  approvedRequests: number;
+  totalInvestment: number;
 }
 
-const StartupList = () => {
+export const StartupList = () => {
   const [startups, setStartups] = useState<Startup[]>([]);
   const [filteredStartups, setFilteredStartups] = useState<Startup[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchStartups = async () => {
       try {
-        const startupCollection = collection(db, "startups");
+        const startupCollection = collection(db, "startup_data");
         const startupSnapshot = await getDocs(startupCollection);
         const startupList = startupSnapshot.docs.map(doc => ({
           id: doc.id,
@@ -40,12 +53,17 @@ const StartupList = () => {
         setLoading(false);
       } catch (error) {
         console.error("Error fetching startups:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load startups. Please try again later.",
+          variant: "destructive",
+        });
         setLoading(false);
       }
     };
 
     fetchStartups();
-  }, []);
+  }, [toast]);
 
   useEffect(() => {
     if (searchTerm) {
@@ -53,50 +71,14 @@ const StartupList = () => {
         startup =>
           startup.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
           startup.domain.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          startup.founder.toLowerCase().includes(searchTerm.toLowerCase())
+          startup.founder.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (startup.cofounder && startup.cofounder.toLowerCase().includes(searchTerm.toLowerCase()))
       );
       setFilteredStartups(filtered);
     } else {
       setFilteredStartups(startups);
     }
   }, [searchTerm, startups]);
-
-  // Mock data for initial development
-  useEffect(() => {
-    if (startups.length === 0 && !loading) {
-      const mockStartups: Startup[] = [
-        {
-          id: "1",
-          name: "EcoSolutions India",
-          founder: "Rajesh Kumar",
-          domain: "Sustainable Energy",
-          description: "Developing affordable solar solutions for rural India",
-          askingInvestment: 5000000,
-          equity: 15,
-        },
-        {
-          id: "2",
-          name: "MedTech Innovations",
-          founder: "Priya Sharma",
-          domain: "Healthcare",
-          description: "AI-powered diagnostic tools for rural healthcare centers",
-          askingInvestment: 7500000,
-          equity: 20,
-        },
-        {
-          id: "3",
-          name: "AgriConnect",
-          founder: "Vikram Singh",
-          domain: "Agriculture",
-          description: "Connecting farmers directly to markets through mobile technology",
-          askingInvestment: 3000000,
-          equity: 12,
-        },
-      ];
-      setStartups(mockStartups);
-      setFilteredStartups(mockStartups);
-    }
-  }, [startups, loading]);
 
   return (
     <div className="container mx-auto py-8">
@@ -123,20 +105,28 @@ const StartupList = () => {
               <CardHeader className="bg-gradient-to-r from-india-saffron/10 to-india-green/10">
                 <CardTitle>{startup.name}</CardTitle>
                 <p className="text-sm text-gray-500">Founded by {startup.founder}</p>
+                {startup.cofounder && (
+                  <p className="text-sm text-gray-500">Co-founder: {startup.cofounder}</p>
+                )}
               </CardHeader>
               <CardContent className="p-6">
                 <Badge className="mb-2 bg-india-saffron">{startup.domain}</Badge>
-                <p className="text-gray-600 mt-2">{startup.description}</p>
+                <p className="text-gray-600 mt-2 line-clamp-3">{startup.description}</p>
                 <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
                   <div>
                     <p className="text-gray-500">Asking</p>
-                    <p className="font-semibold">₹{(startup.askingInvestment).toLocaleString()}</p>
+                    <p className="font-semibold">₹{startup.askingInvestment.toLocaleString()}</p>
                   </div>
                   <div>
                     <p className="text-gray-500">Equity Offered</p>
                     <p className="font-semibold">{startup.equity}%</p>
                   </div>
                 </div>
+                {startup.location && (
+                  <p className="text-sm text-gray-500 mt-2">
+                    📍 {startup.location}
+                  </p>
+                )}
               </CardContent>
               <CardFooter className="bg-gray-50 p-4">
                 <Link to={`/investor/startup/${startup.id}`} className="w-full">
@@ -156,5 +146,3 @@ const StartupList = () => {
     </div>
   );
 };
-
-export default StartupList;

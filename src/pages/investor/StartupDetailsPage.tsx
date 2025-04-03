@@ -1,14 +1,13 @@
-
 import React from "react";
 import Navbar from "@/components/common/Navbar";
-import StartupDetails from "@/components/investor/StartupDetails";
 import Footer from "@/components/common/Footer";
+import { StartupDetails } from "@/components/investor/StartupDetails";
 
 const StartupDetailsPage = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main className="flex-grow bg-gray-50">
+      <main className="flex-grow">
         <StartupDetails />
       </main>
       <Footer />
