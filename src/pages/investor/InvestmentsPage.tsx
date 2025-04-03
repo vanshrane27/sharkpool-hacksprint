@@ -1,8 +1,7 @@
-
 import React from "react";
-import Navbar from "@/components/common/Navbar";
+import { Navbar } from "@/components/common/Navbar";
 import InvestmentsList from "@/components/investor/InvestmentsList";
-import Footer from "@/components/common/Footer";
+import { Footer } from "@/components/common/Footer";
 
 const InvestmentsPage = () => {
   return (

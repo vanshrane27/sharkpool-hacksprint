@@ -44,7 +44,7 @@ interface InvestmentRequest {
   date: any;
 }
 
-const StartupDashboard = () => {
+export const StartupDashboard = () => {
   const { userData, currentUser } = useAuth();
   const [activeTab, setActiveTab] = useState("startups");
   const [startups, setStartups] = useState<HostedStartup[]>([]);
@@ -194,19 +194,19 @@ const StartupCard = ({ startup }: { startup: HostedStartup }) => {
     <Card className="overflow-hidden hover:shadow-md transition-shadow duration-300">
       <CardHeader className="pb-3 bg-gradient-to-r from-india-saffron/10 to-india-green/10">
         <CardTitle>{startup.name}</CardTitle>
-        <CardDescription>
+        <div className="mt-1">
           <Badge className="bg-india-saffron">{startup.domain}</Badge>
-        </CardDescription>
+        </div>
       </CardHeader>
       <CardContent className="pt-6">
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <p className="text-sm text-gray-500">Asking</p>
+              <span className="text-sm text-gray-500">Asking</span>
               <p className="font-semibold">₹{startup.askingInvestment.toLocaleString()}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-500">Equity</p>
+              <span className="text-sm text-gray-500">Equity</span>
               <p className="font-semibold">{startup.equity}%</p>
             </div>
           </div>
@@ -221,11 +221,11 @@ const StartupCard = ({ startup }: { startup: HostedStartup }) => {
           
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <p className="text-sm text-gray-500">Pending Requests</p>
+              <span className="text-sm text-gray-500">Pending Requests</span>
               <p className="font-semibold">{startup.pendingRequests}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-500">Approved Deals</p>
+              <span className="text-sm text-gray-500">Approved Deals</span>
               <p className="font-semibold">{startup.approvedRequests}</p>
             </div>
           </div>
@@ -256,22 +256,22 @@ const RequestCard = ({ request }: { request: InvestmentRequest }) => {
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <p className="text-sm text-gray-500">Investment Offer</p>
+              <span className="text-sm text-gray-500">Investment Offer</span>
               <p className="font-semibold">₹{request.amount.toLocaleString()}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-500">Equity Request</p>
+              <span className="text-sm text-gray-500">Equity Request</span>
               <p className="font-semibold">{request.equity}%</p>
             </div>
           </div>
           <div>
-            <p className="text-sm text-gray-500">Valuation</p>
+            <span className="text-sm text-gray-500">Valuation</span>
             <p className="font-semibold">
               ₹{((request.amount / request.equity) * 100).toLocaleString()}
             </p>
           </div>
           <div>
-            <p className="text-sm text-gray-500">Request Date</p>
+            <span className="text-sm text-gray-500">Request Date</span>
             <p className="text-sm">{new Date(request.date?.toDate()).toLocaleDateString()}</p>
           </div>
         </div>
@@ -303,5 +303,3 @@ const EmptyStartupState = () => {
     </div>
   );
 };
-
-export default StartupDashboard;

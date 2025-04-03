@@ -114,11 +114,11 @@ export const StartupList = () => {
                 <p className="text-gray-600 mt-2 line-clamp-3">{startup.description}</p>
                 <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
                   <div>
-                    <p className="text-gray-500">Asking</p>
+                    <span className="text-gray-500">Asking</span>
                     <p className="font-semibold">₹{startup.askingInvestment.toLocaleString()}</p>
                   </div>
                   <div>
-                    <p className="text-gray-500">Equity Offered</p>
+                    <span className="text-gray-500">Equity Offered</span>
                     <p className="font-semibold">{startup.equity}%</p>
                   </div>
                 </div>

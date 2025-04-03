@@ -130,15 +130,15 @@ export const StartupDetails = () => {
               <h3 className="text-lg font-semibold mb-2">Investment Details</h3>
               <div className="space-y-4">
                 <div>
-                  <p className="text-gray-500">Asking Investment</p>
+                  <span className="text-gray-500">Asking Investment</span>
                   <p className="text-2xl font-bold">₹{startup.askingInvestment.toLocaleString()}</p>
                 </div>
                 <div>
-                  <p className="text-gray-500">Equity Offered</p>
+                  <span className="text-gray-500">Equity Offered</span>
                   <p className="text-2xl font-bold">{startup.equity}%</p>
                 </div>
                 <div>
-                  <p className="text-gray-500">Total Investment Raised</p>
+                  <span className="text-gray-500">Total Investment Raised</span>
                   <p className="text-2xl font-bold">₹{startup.totalInvestment.toLocaleString()}</p>
                 </div>
               </div>

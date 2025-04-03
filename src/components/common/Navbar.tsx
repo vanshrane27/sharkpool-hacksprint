@@ -1,11 +1,10 @@
-
 import React from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { LogOut, Bell } from "lucide-react";
 
-const Navbar = () => {
+export const Navbar = () => {
   const { currentUser, userData, logout } = useAuth();
 
   const handleLogout = async () => {
@@ -85,5 +84,3 @@ const Navbar = () => {
     </nav>
   );
 };
-
-export default Navbar;

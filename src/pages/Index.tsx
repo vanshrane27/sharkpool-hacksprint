@@ -1,10 +1,9 @@
-
 import React from "react";
-import Navbar from "@/components/common/Navbar";
+import { Navbar } from "@/components/common/Navbar";
 import Hero from "@/components/home/Hero";
 import Features from "@/components/home/Features";
 import Stats from "@/components/home/Stats";
-import Footer from "@/components/common/Footer";
+import { Footer } from "@/components/common/Footer";
 
 const Index = () => {
   return (

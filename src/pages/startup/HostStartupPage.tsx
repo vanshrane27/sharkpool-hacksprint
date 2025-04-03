@@ -1,8 +1,7 @@
-
 import React from "react";
-import Navbar from "@/components/common/Navbar";
+import { Navbar } from "@/components/common/Navbar";
 import HostStartupForm from "@/components/startup/HostStartupForm";
-import Footer from "@/components/common/Footer";
+import { Footer } from "@/components/common/Footer";
 
 const HostStartupPage = () => {
   return (

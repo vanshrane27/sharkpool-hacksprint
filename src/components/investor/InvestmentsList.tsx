@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -178,22 +177,22 @@ const InvestmentCard = ({ investment }: { investment: Investment }) => {
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <p className="text-sm text-gray-500">Investment</p>
+              <span className="text-sm text-gray-500">Investment</span>
               <p className="font-semibold">₹{investment.amount.toLocaleString()}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-500">Equity</p>
+              <span className="text-sm text-gray-500">Equity</span>
               <p className="font-semibold">{investment.equity}%</p>
             </div>
           </div>
           <div>
-            <p className="text-sm text-gray-500">Valuation</p>
+            <span className="text-sm text-gray-500">Valuation</span>
             <p className="font-semibold">
               ₹{((investment.amount / investment.equity) * 100).toLocaleString()}
             </p>
           </div>
           <div>
-            <p className="text-sm text-gray-500">Request Date</p>
+            <span className="text-sm text-gray-500">Request Date</span>
             <p className="font-semibold">{new Date(investment.date).toLocaleDateString()}</p>
           </div>
           <Button 
