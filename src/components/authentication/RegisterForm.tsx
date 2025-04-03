@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation, Link } from "react-router-dom";
+import { useLocation, Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
@@ -16,10 +15,10 @@ const RegisterForm = () => {
   const [displayName, setDisplayName] = useState("");
   const [role, setRole] = useState<"investor" | "startup">("startup");
   const [loading, setLoading] = useState(false);
-  const { register } = useAuth();
+  const { signup } = useAuth();
   const { toast } = useToast();
-  const navigate = useNavigate();
   const location = useLocation();
+  const navigate = useNavigate();
 
   // Check URL params for pre-selected role
   useEffect(() => {
@@ -46,14 +45,21 @@ const RegisterForm = () => {
     setLoading(true);
 
     try {
-      await register(email, password, role, displayName);
+      await signup(email, password, displayName, role);
       toast({
         title: "Registration successful",
         description: "Your account has been created successfully.",
         duration: 3000,
       });
-      navigate("/login");
+      
+      // Navigate based on role
+      if (role === "investor") {
+        navigate("/investor/dashboard");
+      } else {
+        navigate("/startup/dashboard");
+      }
     } catch (error: any) {
+      console.error("Registration error:", error);
       toast({
         title: "Registration failed",
         description: error.message || "Failed to register. Please try again.",

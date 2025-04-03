@@ -1,10 +1,9 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider, useAuth } from "@/context/AuthContext";
+import { AuthProvider } from "@/context/AuthContext";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
@@ -14,27 +13,15 @@ import StartupDetailsPage from "./pages/investor/StartupDetailsPage";
 import InvestmentsPage from "./pages/investor/InvestmentsPage";
 import DashboardPage from "./pages/startup/DashboardPage";
 import HostStartupPage from "./pages/startup/HostStartupPage";
+import ProtectedRoute from "./components/common/ProtectedRoute";
+import ProfilePage from "./pages/ProfilePage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
+import StartupRequestsPage from "./pages/startup/StartupRequestsPage";
+import InvestorNotificationsPage from "./pages/investor/InvestorNotificationsPage";
+import StartupNotificationsPage from "./pages/startup/StartupNotificationsPage";
 
 const queryClient = new QueryClient();
-
-// Protected route wrapper
-const ProtectedRoute = ({ children, requiredRole }: { children: React.ReactNode; requiredRole?: string }) => {
-  const { currentUser, userData, loading } = useAuth();
-  
-  if (loading) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
-  }
-  
-  if (!currentUser) {
-    return <Navigate to="/login" />;
-  }
-  
-  if (requiredRole && userData?.role !== requiredRole) {
-    return <Navigate to="/" />;
-  }
-  
-  return <>{children}</>;
-};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -44,53 +31,33 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
+            {/* Public Routes */}
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
+            
+            {/* Protected Routes - No specific role required */}
+            <Route element={<ProtectedRoute />}>
+              <Route path="/profile" element={<ProfilePage />} />
+            </Route>
             
             {/* Investor Routes */}
-            <Route 
-              path="/investor/startups" 
-              element={
-                <ProtectedRoute requiredRole="investor">
-                  <StartupListingPage />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/investor/startup/:id" 
-              element={
-                <ProtectedRoute requiredRole="investor">
-                  <StartupDetailsPage />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/investor/investments" 
-              element={
-                <ProtectedRoute requiredRole="investor">
-                  <InvestmentsPage />
-                </ProtectedRoute>
-              } 
-            />
+            <Route element={<ProtectedRoute requiredRole="investor" />}>
+              <Route path="/investor/startups" element={<StartupListingPage />} />
+              <Route path="/investor/startup/:id" element={<StartupDetailsPage />} />
+              <Route path="/investor/investments" element={<InvestmentsPage />} />
+              <Route path="/investor/notifications" element={<InvestorNotificationsPage />} />
+            </Route>
             
             {/* Startup Routes */}
-            <Route 
-              path="/startup/dashboard" 
-              element={
-                <ProtectedRoute requiredRole="startup">
-                  <DashboardPage />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/startup/host" 
-              element={
-                <ProtectedRoute requiredRole="startup">
-                  <HostStartupPage />
-                </ProtectedRoute>
-              } 
-            />
+            <Route element={<ProtectedRoute requiredRole="startup" />}>
+              <Route path="/startup/dashboard" element={<DashboardPage />} />
+              <Route path="/startup/host" element={<HostStartupPage />} />
+              <Route path="/startup/requests" element={<StartupRequestsPage />} />
+              <Route path="/startup/notifications" element={<StartupNotificationsPage />} />
+            </Route>
             
             {/* Catch-all route */}
             <Route path="*" element={<NotFound />} />

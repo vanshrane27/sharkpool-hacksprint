@@ -1,31 +1,35 @@
-
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { 
+  User, 
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword, 
   signOut, 
   onAuthStateChanged,
-  User
-} from "firebase/auth";
-import { doc, getDoc, setDoc } from "firebase/firestore";
-import { auth, db } from "@/lib/firebase";
-
-type UserRole = "investor" | "startup";
+  GoogleAuthProvider,
+  signInWithPopup,
+  sendPasswordResetEmail,
+  updateProfile
+} from 'firebase/auth';
+import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
+import { auth, db } from '@/lib/firebase';
 
 interface UserData {
   email: string;
-  displayName?: string;
-  role: UserRole;
-  uid: string;
+  displayName: string;
+  role: 'investor' | 'startup';
+  createdAt: any;
+  updatedAt: any;
 }
 
 interface AuthContextType {
   currentUser: User | null;
   userData: UserData | null;
-  login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, role: UserRole, displayName?: string) => Promise<void>;
-  logout: () => Promise<void>;
   loading: boolean;
+  signup: (email: string, password: string, displayName: string, role: 'investor' | 'startup') => Promise<User>;
+  login: (email: string, password: string) => Promise<User>;
+  loginWithGoogle: () => Promise<User>;
+  logout: () => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -33,7 +37,7 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
+    throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 };
@@ -43,61 +47,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Register function
-  const register = async (email: string, password: string, role: UserRole, displayName?: string) => {
-    try {
-      const result = await createUserWithEmailAndPassword(auth, email, password);
-      
-      // Create a user document in Firestore
-      await setDoc(doc(db, "users", result.user.uid), {
-        email,
-        displayName: displayName || email.split('@')[0],
-        role,
-        uid: result.user.uid,
-        createdAt: new Date().toISOString()
-      });
-    } catch (error) {
-      console.error("Error registering user:", error);
-      throw error;
-    }
-  };
-
-  // Login function
-  const login = async (email: string, password: string) => {
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-    } catch (error) {
-      console.error("Error logging in:", error);
-      throw error;
-    }
-  };
-
-  // Logout function
-  const logout = async () => {
-    try {
-      await signOut(auth);
-    } catch (error) {
-      console.error("Error signing out:", error);
-      throw error;
-    }
-  };
-
-  // Listen to auth state changes
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
       
       if (user) {
-        // Get user data from Firestore
-        try {
-          const docRef = doc(db, "users", user.uid);
-          const docSnap = await getDoc(docRef);
-          
-          if (docSnap.exists()) {
-            setUserData(docSnap.data() as UserData);
-          }
-        } catch (error) {
-          console.error("Error fetching user data:", error);
+        // Fetch user data from Firestore
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        if (userDoc.exists()) {
+          const data = userDoc.data() as UserData;
+          setUserData(data);
         }
       } else {
         setUserData(null);
@@ -109,13 +68,109 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return unsubscribe;
   }, []);
 
+  const signup = async (email: string, password: string, displayName: string, role: 'investor' | 'startup') => {
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      
+      // Update the user's display name using the updateProfile function
+      await updateProfile(user, {
+        displayName: displayName
+      });
+      
+      // Create user profile in Firestore
+      const userData: UserData = {
+        email,
+        displayName,
+        role,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      };
+      
+      await setDoc(doc(db, 'users', user.uid), userData);
+      setUserData(userData);
+      
+      return user;
+    } catch (error) {
+      console.error('Error signing up:', error);
+      throw error;
+    }
+  };
+
+  const login = async (email: string, password: string) => {
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      
+      // Fetch user data
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      if (userDoc.exists()) {
+        const data = userDoc.data() as UserData;
+        setUserData(data);
+      }
+      
+      return user;
+    } catch (error) {
+      console.error('Error logging in:', error);
+      throw error;
+    }
+  };
+
+  const loginWithGoogle = async () => {
+    try {
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      
+      // Check if user document exists
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      
+      if (!userDoc.exists()) {
+        // Create user document if it doesn't exist
+        await setDoc(doc(db, 'users', user.uid), {
+          email: user.email,
+          displayName: user.displayName,
+          role: 'startup', // Default role
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        });
+      }
+      
+      return user;
+    } catch (error) {
+      console.error('Error logging in with Google:', error);
+      throw error;
+    }
+  };
+
+  const logout = async () => {
+    try {
+      await signOut(auth);
+      setUserData(null);
+    } catch (error) {
+      console.error('Error logging out:', error);
+      throw error;
+    }
+  };
+
+  const resetPassword = async (email: string) => {
+    try {
+      return await sendPasswordResetEmail(auth, email);
+    } catch (error) {
+      console.error('Error resetting password:', error);
+      throw error;
+    }
+  };
+
   const value = {
     currentUser,
     userData,
+    loading,
+    signup,
     login,
-    register,
+    loginWithGoogle,
     logout,
-    loading
+    resetPassword
   };
 
   return (
@@ -124,3 +179,5 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     </AuthContext.Provider>
   );
 };
+
+export default AuthContext;

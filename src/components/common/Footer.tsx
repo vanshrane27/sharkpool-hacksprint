@@ -8,9 +8,9 @@ const Footer = () => {
       <div className="max-w-7xl mx-auto py-12 px-4 overflow-hidden sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8 mb-8">
           <div>
-            <Link to="/" className="flex items-center">
-              <span className="text-india-saffron font-bold text-xl mr-1">Startup</span>
-              <span className="text-white font-bold text-xl">Nexus</span>
+            <Link to="/" className="flex items-center font-bold">
+              <span className="text-india-saffron font-bold text-xl mr-1">SHARK</span>
+              <span className="text-white font-bold text-xl">POOL</span>
               <span className="text-india-green font-bold text-xs ml-1">India</span>
             </Link>
             <p className="mt-4 text-gray-300">
@@ -84,7 +84,7 @@ const Footer = () => {
         
         <div className="mt-8 border-t border-gray-700 pt-8 flex flex-col md:flex-row justify-between items-center">
           <div className="text-base text-gray-400">
-            &copy; 2023 Startup Nexus India. All rights reserved.
+            &copy; 2025 SHARKPOOL India. All rights reserved.
           </div>
           <div className="mt-4 md:mt-0 flex space-x-6">
             <a href="#" className="text-gray-400 hover:text-white">
